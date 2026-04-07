@@ -1,0 +1,13 @@
+name: HTML Tag Check
+on: [push, pull_request]
+jobs:
+  validate-html:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check for <title> and <h1>
+        run: |
+          grep -q "<title>" index.html || (echo "Error: <title> tag missing!" && exit 1)
+          grep -q "<h1>" index.html || (echo "Error: <h1> tag missing!" && exit 1)
+          echo "Success: Required tags are present."
