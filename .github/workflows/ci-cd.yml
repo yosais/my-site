@@ -1,0 +1,48 @@
+name: HTML Tag Check and Deploy
+on:
+  push:
+    branches: ["main"] # Only deploy when pushing to main
+  workflow_dispatch: # Allows you to run this manually from the Actions tab
+
+# 1. ADD PERMISSIONS
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 2. PREVENT OVERLAPPING DEPLOYS
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  validate-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Your existing validation logic
+      - name: Check for &lt;title&gt; and &lt;h1&gt;
+        run: |
+          grep -q "&lt;title&gt;" index.html || (echo "Error: &lt;title&gt; tag missing!" & exit 1)
+          grep -q "&lt;h1&gt;" index.html || (echo "Error: &lt;h1&gt; tag missing!" & exit 1)
+          echo "Success: Required tags are present."
+
+      # 3. CONFIGURE PAGES
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      # 4. UPLOAD THE FILES
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: &apos;.&apos; # Uploads the root directory where index.html is
+
+      # 5. EXECUTE DEPLOYMENT
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
